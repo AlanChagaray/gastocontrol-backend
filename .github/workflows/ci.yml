@@ -8,42 +8,50 @@ jobs:
   laravel-test:
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB: laravel_test
+          POSTGRES_USER: laravel
+          POSTGRES_PASSWORD: password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U laravel"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.2'
-          extensions: mbstring, bcmath, pdo_mysql, zip
-          coverage: none
+          php-version: '8.3'
+          extensions: mbstring, bcmath, pdo_pgsql
 
       - name: Install dependencies
-        run: composer install --prefer-dist --no-progress --no-suggest --no-interaction
+        run: composer install --prefer-dist --no-interaction
 
-      - name: Copy .env.example to .env
+      - name: Copy env
         run: cp .env.example .env
 
-      - name: Generate application key
+      - name: Generate key
         run: php artisan key:generate
 
-      - name: Configure PostgreSQL
+      - name: Set DB config
         run: |
-          sudo apt-get update
-          sudo apt-get install postgresql postgresql-contrib -y
-          sudo -u postgres psql -c "CREATE ROLE laravel WITH LOGIN PASSWORD 'password';"
-          sudo -u postgres psql -c "ALTER ROLE laravel CREATEDB;"
-          sudo -u postgres psql -c "CREATE DATABASE laravel_test OWNER laravel;"
-          sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE laravel_test TO laravel;"
           echo "DB_CONNECTION=pgsql" >> .env
-          echo "DB_HOST=localhost" >> .env
+          echo "DB_HOST=127.0.0.1" >> .env
           echo "DB_PORT=5432" >> .env
           echo "DB_DATABASE=laravel_test" >> .env
           echo "DB_USERNAME=laravel" >> .env
           echo "DB_PASSWORD=password" >> .env
 
       - name: Run migrations
-        run: php artisan migrate:fresh
+        run: php artisan migrate
 
       - name: Run tests
         run: php artisan test
