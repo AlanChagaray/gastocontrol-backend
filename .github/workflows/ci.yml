@@ -2,32 +2,53 @@ name: CI
 
 on:
   push:
-    branches: [develop, main]
+    branches: [main]
+
+  pull_request:
+    branches: [main]
 
 jobs:
   laravel-test:
     runs-on: ubuntu-latest
 
     steps:
+      # 📥 Clonar repo
       - uses: actions/checkout@v4
 
+      # 🐘 Setup PHP
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.4'
-          extensions: mbstring, bcmath, pdo_pgsql
+          php-version: '8.3'
+          extensions: mbstring, bcmath, sqlite
+          tools: composer:v2
 
+      # 🔍 Verificar versión
       - name: Check PHP version
         run: php -v
 
+      # 📦 Instalar dependencias
       - name: Install dependencies
-        run: composer install --no-interaction --prefer-dist
+        run: composer install --no-interaction --prefer-dist --no-progress
 
-      - name: Setup env
+      # ⚙️ Configurar entorno
+      - name: Setup environment
         run: cp .env.example .env
 
+      # 🔐 Generar APP_KEY
       - name: Generate key
         run: php artisan key:generate
 
+      # 🧠 Configurar SQLite en memoria
+      - name: Configure SQLite
+        run: |
+          echo "DB_CONNECTION=sqlite" >> .env
+          echo "DB_DATABASE=:memory:" >> .env
+
+      # 🗄️ Migraciones
+      - name: Run migrations
+        run: php artisan migrate --force
+
+      # 🧪 Ejecutar tests
       - name: Run tests
-        run: php artisan test
+        run: php artisan test --parallel
