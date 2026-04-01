@@ -42,8 +42,7 @@ jobs:
       # 🧠 Configurar SQLite en memoria
       - name: Configure SQLite
         run: |
-          echo "DB_CONNECTION=sqlite" >> .env
-          echo "DB_DATABASE=:memory:" >> .env
+          printf "\nDB_CONNECTION=sqlite\nDB_DATABASE=:memory:\n" >> .env
 
       # 🗄️ Migraciones
       - name: Run migrations
