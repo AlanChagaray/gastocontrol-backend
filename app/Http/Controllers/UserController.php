@@ -27,23 +27,46 @@ class UserController extends Controller
         return response()->json($user, 200);
     }
 
-    public function verifyEmail(EmailVerificationRequest $request): JsonResponse
+
+    public function verifyEmail(Request $request, $id, $hash): JsonResponse
     {
-        if ($request->user()->hasVerifiedEmail()) {
+        // 1. Validar firma
+        if (! $request->hasValidSignature()) {
             return response()->json([
-                'message' => 'Email ya verificado.',
-            ], 200);
+                'message' => 'Link inválido o expirado.'
+            ], 403);
         }
 
-        if ($request->user()->markEmailAsVerified()) {
-            event(new Verified($request->user()));
+        // 2. Buscar usuario
+        $user = User::find($id);
+
+        if (! $user) {
+            return response()->json([
+                'message' => 'Usuario no encontrado.'
+            ], 404);
         }
+
+        // 3. Validar hash
+        if (! hash_equals($hash, sha1($user->email))) {
+            return response()->json([
+                'message' => 'Hash inválido.'
+            ], 403);
+        }
+
+        // 4. Verificar si ya está verificado
+        if ($user->hasVerifiedEmail()) {
+            return response()->json([
+                'message' => 'Email ya verificado.'
+            ]);
+        }
+
+        // 5. Marcar como verificado
+        $user->markEmailAsVerified();
 
         return response()->json([
-            'message' => 'Email verificado exitosamente.',
-        ], 200);
+            'message' => 'Email verificado correctamente.'
+        ]);
     }
-
     /**
      * Resend email verification notification.
      */

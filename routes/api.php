@@ -59,16 +59,14 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/expenses/byMonth', [ExpensesController::class, 'byMonth'])->name('api.expenses.byMonth');
     Route::apiResource('expenses', ExpensesController::class);
 
-    // Email Verification
-    Route::get('/email/verify/{id}/{hash}', [UserController::class, 'verifyEmail'])
-        ->middleware(['signed'])
-        ->name('verification.verify');
-    
     Route::post('/email/resend', [UserController::class, 'resendVerificationEmail'])
         ->middleware('throttle:3,1')
         ->name('verification.resend');
 });
 
+    // Email Verification
+ Route::get('/email/verify/{id}/{hash}', [UserController::class, 'verifyEmail'])->name('verification.verify');
+    
 // Protected routes that require email verification
 Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     // Add routes here that require email verification

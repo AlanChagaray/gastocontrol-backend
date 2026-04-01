@@ -23,7 +23,8 @@ class RegisterRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['required', 'string', 'max:255'],
+                'first_name' => ['required', 'string', 'max:255'],
+                'last_name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'password' => ['required', 'confirmed', Password::min(8)
                 ->letters()
@@ -42,7 +43,8 @@ class RegisterRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'name.required' => 'El nombre es obligatorio.',
+              'first_name.required' => 'El nombre es obligatorio.',
+              'last_name.required' => 'El apellido es obligatorio.',
             'email.required' => 'El email es obligatorio.',
             'email.email' => 'Debe ser un email válido.',
             'email.unique' => 'Este email ya está registrado.',

@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+    branches: [develop, main]
+
+jobs:
+  laravel-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1'
+          extensions: mbstring, bcmath, pdo_mysql, zip
+          coverage: none
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-progress --no-suggest --no-interaction
+
+      - name: Copy .env.example to .env
+        run: cp .env.example .env
+
+      - name: Generate application key
+        run: php artisan key:generate
+
+      - name: Configure PostgreSQL
+        run: |
+          sudo apt-get update
+          sudo apt-get install postgresql postgresql-contrib -y
+          sudo -u postgres psql -c "CREATE ROLE laravel WITH LOGIN PASSWORD 'password';"
+          sudo -u postgres psql -c "ALTER ROLE laravel CREATEDB;"
+          sudo -u postgres psql -c "CREATE DATABASE laravel_test OWNER laravel;"
+          sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE laravel_test TO laravel;"
+          echo "DB_CONNECTION=pgsql" >> .env
+          echo "DB_HOST=localhost" >> .env
+          echo "DB_PORT=5432" >> .env
+          echo "DB_DATABASE=laravel_test" >> .env
+          echo "DB_USERNAME=laravel" >> .env
+          echo "DB_PASSWORD=password" >> .env
+
+      - name: Run migrations
+        run: php artisan migrate:fresh
+
+      - name: Run tests
+        run: php artisan test
