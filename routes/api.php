@@ -44,7 +44,7 @@ Route::prefix('auth')->group(function () {
 });
 
 // Protected routes (require authentication)
-Route::middleware(['auth:sanctum'])->group(function () {
+Route::middleware(['auth:api'])->group(function () {
     // User information
     Route::get('/auth/me', [AuthController::class, 'me'])->name('api.me');
     Route::post('/auth/logout', [AuthController::class, 'logout'])->name('api.logout');
@@ -68,7 +68,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
  Route::get('/email/verify/{id}/{hash}', [UserController::class, 'verifyEmail'])->name('verification.verify');
     
 // Protected routes that require email verification
-Route::middleware(['auth:sanctum', 'verified'])->group(function () {
+Route::middleware(['auth:api', 'verified'])->group(function () {
     // Add routes here that require email verification
     // Example:
     // Route::apiResource('expenses', ExpenseController::class);

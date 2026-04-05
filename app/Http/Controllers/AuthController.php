@@ -41,28 +41,27 @@ class AuthController extends Controller
     /**
      * Login with email and password.
      */
-    public function login(LoginRequest $request): JsonResponse
-    {
-        $credentials = $request->only('email', 'password');
+public function login(LoginRequest $request): JsonResponse
+{
+    $user = User::where('email', $request->email)->first();
 
-        if (!Auth::attempt($credentials)) {
-            return response()->json([
-                'message' => 'Credenciales inválidas.',
-            ], 401);
-        }
-
-        $user = Auth::user();
-
-        // Generate Sanctum token
-        $token = $user->createToken('auth-token')->plainTextToken;
-
+    if (!$user || !Hash::check($request->password, $user->password)) {
         return response()->json([
-            'message' => 'Login exitoso.',
-            'user' => $user,
-            'token' => $token,
-        ], 200);
+            'message' => 'Credenciales inválidas.',
+        ], 401);
     }
 
+    // Opcional: eliminar tokens anteriores (solo 1 sesión activa)
+    $user->tokens()->delete();
+
+    $token = $user->createToken('auth-token')->plainTextToken;
+
+    return response()->json([
+        'message' => 'Login exitoso.',
+        'user' => $user,
+        'token' => $token,
+    ]);
+}
     /**
      * Get authenticated user.
      */
