@@ -20,8 +20,8 @@ class User extends Authenticatable implements MustVerifyEmail
      * @var list<string>
      */
     protected $fillable = [
-           'first_name',
-           'last_name',
+        'first_name',
+        'last_name',
         'email',
         'password',
     ];
@@ -71,6 +71,14 @@ class User extends Authenticatable implements MustVerifyEmail
     public function expenses(): HasMany
     {
         return $this->hasMany(Expenses::class);
+    }
+
+    /**
+     * Get the incomes for the user.
+     */
+    public function incomes(): HasMany
+    {
+        return $this->hasMany(Income::class);
     }
 
 }

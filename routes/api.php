@@ -44,7 +44,7 @@ Route::prefix('auth')->group(function () {
 });
 
 // Protected routes (require authentication)
-Route::middleware(['auth:api'])->group(function () {
+Route::middleware(['auth:sanctum'])->group(function () {
     // User information
     Route::get('/auth/me', [AuthController::class, 'me'])->name('api.me');
     Route::post('/auth/logout', [AuthController::class, 'logout'])->name('api.logout');
@@ -52,6 +52,9 @@ Route::middleware(['auth:api'])->group(function () {
     // Users list (for testing/admin)
     Route::get('/users', [UserController::class, 'index'])->name('api.users.index');
     Route::get('/users/{id}', [UserController::class, 'show'])->name('api.users.show');
+    Route::get('/user/me', [UserController::class, 'me'])->name('api.users.me');
+    Route::get('/user/income/{date}', [UserController::class, 'income'])->name('api.users.income');
+    Route::put('/user/income/{date}', [UserController::class, 'income'])->name('api.users.income');
 
     // Category and Expense routes would go here, e.g.:
     Route::apiResource('categories', CategoryController::class);

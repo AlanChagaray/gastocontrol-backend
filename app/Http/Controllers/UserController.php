@@ -84,4 +84,55 @@ class UserController extends Controller
             'message' => 'Enlace de verificación enviado.',
         ], 200);
     }
+
+        /**
+     * Get authenticated user.
+     */
+    public function me(Request $request): JsonResponse
+    {
+        return response()->json([
+            $request->user(),
+        ], 200);
+    }
+
+
+    public function income(Request $request): JsonResponse
+    {
+        $date = $request->route('date'); // Formato esperado: YYYY-MM
+
+        if($incomeAmount = $request->input('income')) {
+            $user = $request->user();
+
+            // Buscar o crear income para este mes
+            $income = $user->incomes()
+                ->whereYear('date', substr($date, 0, 4))
+                ->whereMonth('date', substr($date, 5, 2))
+                ->first();
+
+            if ($income) {
+                $income->update(['amount' => $incomeAmount]);
+            } else {
+                $income = $user->incomes()->create([
+                    'amount' => $incomeAmount,
+                    'date' => $date . '-01', // Primer día del mes
+                    'description' => 'Ingreso mensual',
+                ]);
+            }
+
+            return response()->json([
+                'message' => 'Ingreso actualizado.',
+                'income' => $income->amount,
+            ], 200);
+        }
+
+        $user = $request->user();
+        $totalIncome = $user->incomes()
+            ->whereYear('date', substr($date, 0, 4))
+            ->whereMonth('date', substr($date, 5, 2))
+            ->sum('amount');
+
+        return response()->json([
+            'income' => $totalIncome,
+        ], 200);
+    }
 }

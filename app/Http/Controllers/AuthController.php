@@ -68,7 +68,7 @@ public function login(LoginRequest $request): JsonResponse
     public function me(Request $request): JsonResponse
     {
         return response()->json([
-            'user' => $request->user(),
+            $request->user(),
         ], 200);
     }
 
