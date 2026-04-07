@@ -98,41 +98,43 @@ class UserController extends Controller
 
     public function income(Request $request): JsonResponse
     {
-        $date = $request->route('date'); // Formato esperado: YYYY-MM
+        $dateParam = $request->query('date', now()->format('Y-m'));
+        $year = substr($dateParam, 0, 4);
+        $month = substr($dateParam, 5, 2);
 
-        if($incomeAmount = $request->input('income')) {
+        if($amount = $request->input('amount')) {
             $user = $request->user();
 
             // Buscar o crear income para este mes
             $income = $user->incomes()
-                ->whereYear('date', substr($date, 0, 4))
-                ->whereMonth('date', substr($date, 5, 2))
+                ->whereYear('date', $year)
+                ->whereMonth('date', $month)
                 ->first();
 
             if ($income) {
-                $income->update(['amount' => $incomeAmount]);
+                $income->update(['amount' => $amount]);
             } else {
                 $income = $user->incomes()->create([
-                    'amount' => $incomeAmount,
-                    'date' => $date . '-01', // Primer día del mes
+                    'amount' => $amount,
+                    'date' => $year . '-' . $month . '-01',
                     'description' => 'Ingreso mensual',
                 ]);
             }
 
             return response()->json([
                 'message' => 'Ingreso actualizado.',
-                'income' => $income->amount,
+                'amount' => $income->amount,
             ], 200);
         }
 
         $user = $request->user();
         $totalIncome = $user->incomes()
-            ->whereYear('date', substr($date, 0, 4))
-            ->whereMonth('date', substr($date, 5, 2))
+            ->whereYear('date', $year)
+            ->whereMonth('date', $month)
             ->sum('amount');
 
         return response()->json([
-            'income' => $totalIncome,
+            'amount' => $totalIncome,
         ], 200);
     }
 }
