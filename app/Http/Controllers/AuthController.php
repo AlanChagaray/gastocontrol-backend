@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\LoginRequest;
 use App\Http\Requests\RegisterRequest;
+use App\Models\Category;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\JsonResponse;
@@ -19,11 +20,13 @@ class AuthController extends Controller
     public function register(RegisterRequest $request): JsonResponse
     {
         $user = User::create([
-            'first_name' => $request->first_name,
-            'last_name' => $request->last_name,
+            'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
         ]);
+
+        // Crear las categorías por defecto para el usuario nuevo
+        Category::createDefaultsForUser($user->id);
 
         // Trigger email verification notification
         event(new Registered($user));
@@ -41,34 +44,35 @@ class AuthController extends Controller
     /**
      * Login with email and password.
      */
-public function login(LoginRequest $request): JsonResponse
-{
-    $user = User::where('email', $request->email)->first();
+    public function login(LoginRequest $request): JsonResponse
+    {
+        $credentials = $request->only('email', 'password');
 
-    if (!$user || !Hash::check($request->password, $user->password)) {
+        if (!Auth::attempt($credentials)) {
+            return response()->json([
+                'message' => 'Credenciales inválidas.',
+            ], 401);
+        }
+
+        $user = Auth::user();
+
+        // Generate Sanctum token
+        $token = $user->createToken('auth-token')->plainTextToken;
+
         return response()->json([
-            'message' => 'Credenciales inválidas.',
-        ], 401);
+            'message' => 'Login exitoso.',
+            'user' => $user,
+            'token' => $token,
+        ], 200);
     }
 
-    // Opcional: eliminar tokens anteriores (solo 1 sesión activa)
-    $user->tokens()->delete();
-
-    $token = $user->createToken('auth-token')->plainTextToken;
-
-    return response()->json([
-        'message' => 'Login exitoso.',
-        'user' => $user,
-        'token' => $token,
-    ]);
-}
     /**
      * Get authenticated user.
      */
     public function me(Request $request): JsonResponse
     {
         return response()->json([
-            $request->user(),
+            'user' => $request->user(),
         ], 200);
     }
 

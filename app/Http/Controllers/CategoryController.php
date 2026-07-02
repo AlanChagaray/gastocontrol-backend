@@ -12,7 +12,9 @@ class CategoryController extends Controller
 {
     public function index(Request $request)
     {
-        $categories = Category::where('user_id', $request->user()->id)->get();
+        $categories = Category::where('user_id', $request->user()->id)
+            ->orderBy('sort_order')
+            ->get();
         return response()->json($categories, 200);
     }
 
@@ -21,6 +23,18 @@ class CategoryController extends Controller
 
         $validated = $request->validated();
         $validated['user_id'] = $request->user()->id;
+
+        // Color azul por defecto para no romper la UI si no se envía uno
+        if (empty($validated['color'])) {
+            $validated['color'] = '#3b82f6';
+        }
+
+        // Ubicar la categoría nueva al final, después de las por defecto
+        if (!isset($validated['sort_order'])) {
+            $maxOrder = Category::where('user_id', $request->user()->id)->max('sort_order');
+            $validated['sort_order'] = ($maxOrder ?? 0) + 1;
+        }
+
         $category = Category::create($validated);
         return response()->json($category, 201);
     }

@@ -23,8 +23,7 @@ class RegisterRequest extends FormRequest
     public function rules(): array
     {
         return [
-                'first_name' => ['required', 'string', 'max:255'],
-                'last_name' => ['required', 'string', 'max:255'],
+            'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'password' => ['required', 'confirmed', Password::min(8)
                 ->letters()
@@ -43,11 +42,10 @@ class RegisterRequest extends FormRequest
     public function messages(): array
     {
         return [
-              'first_name.required' => 'El nombre es obligatorio.',
-              'last_name.required' => 'El apellido es obligatorio.',
+            'name.required' => 'El nombre es obligatorio.',
             'email.required' => 'El email es obligatorio.',
             'email.email' => 'Debe ser un email válido.',
-            'email.unique' => 'Este email ya está registrado.',
+            'email.unique' => 'No se pudo completar el registro con ese email.',
             'password.required' => 'La contraseña es obligatoria.',
             'password.confirmed' => 'Las contraseñas no coinciden.',
             'password.min' => 'La contraseña debe tener al menos 8 caracteres.',

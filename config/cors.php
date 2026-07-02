@@ -7,11 +7,9 @@ return [
     | Cross-Origin Resource Sharing (CORS) Configuration
     |--------------------------------------------------------------------------
     |
-    | Here you may configure your settings for cross-origin resource sharing
-    | or "CORS". This determines what cross-origin operations may execute
-    | in web browsers. You are free to adjust these settings as needed.
-    |
-    | To learn more: https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS
+    | Orígenes permitidos acotados al frontend. Se leen de CORS_ALLOWED_ORIGINS
+    | (lista separada por comas en el .env); por defecto, los puertos de desarrollo.
+    | No se usan credenciales de cookie porque la API autentica con token Bearer.
     |
     */
 
@@ -19,14 +17,16 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => ['*'],
+    'allowed_origins' => array_filter(explode(',', env(
+        'CORS_ALLOWED_ORIGINS',
+        'http://localhost:3000,http://localhost:3001'
+    ))),
 
     'allowed_origins_patterns' => [],
 
     'allowed_headers' => ['*'],
 
     'exposed_headers' => [],
-
 
     'max_age' => 0,
 

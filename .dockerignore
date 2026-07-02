@@ -1,0 +1,51 @@
+# Ignorar archivos de desarrollo y caché
+.git
+.gitignore
+.gitattributes
+.editorconfig
+# .env
+.env.backup
+.env.production
+.phpunit.result.cache
+
+# Node
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Laravel
+/storage/*.key
+/storage/logs
+/storage/framework/cache/*
+/storage/framework/sessions/*
+/storage/framework/views/*
+/bootstrap/cache/*
+vendor/
+.phpunit.result.cache
+
+# Docker
+docker-compose.override.yml
+Dockerfile.dev
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Documentation
+README.md
+CHANGELOG.md
+DOCKER.md
+INSTALLATION.md
+AUTH_DOCUMENTATION.md
+
+# Tests
+tests/
+phpunit.xml
+.phpunit.cache

@@ -75,8 +75,11 @@ class ExpensesController extends Controller
     public function byMonth(Request $request)
     {
         // Recibe fecha en formato date (ej: 2026-03-15)
-        $date = $request->query('date', now()->format('Y-m-d'));
-        
+        $validated = $request->validate([
+            'date' => 'nullable|date',
+        ]);
+        $date = $validated['date'] ?? now()->format('Y-m-d');
+
         // Extrae mes y año de la fecha
         $dateObj = \Carbon\Carbon::parse($date);
         $month = $dateObj->month;

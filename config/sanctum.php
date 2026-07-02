@@ -47,7 +47,7 @@ return [
     |
     */
 
-    'expiration' => null,
+    'expiration' => env('SANCTUM_EXPIRATION', 60 * 24 * 7), // 7 días por defecto; los tokens ya no viven para siempre
 
     /*
     |--------------------------------------------------------------------------

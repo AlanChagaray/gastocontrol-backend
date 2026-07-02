@@ -21,8 +21,9 @@ class ForgotPasswordRequest extends FormRequest
      */
     public function rules(): array
     {
+        // Sin 'exists': no revelamos si el email está registrado (evita user enumeration).
         return [
-            'email' => ['required', 'string', 'email', 'exists:users,email'],
+            'email' => ['required', 'string', 'email'],
         ];
     }
 
@@ -36,7 +37,6 @@ class ForgotPasswordRequest extends FormRequest
         return [
             'email.required' => 'El email es obligatorio.',
             'email.email' => 'Debe ser un email válido.',
-            'email.exists' => 'No existe una cuenta con este email.',
         ];
     }
 }

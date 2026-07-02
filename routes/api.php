@@ -22,7 +22,9 @@ use Illuminate\Support\Facades\Route;
 // Public routes
 Route::prefix('auth')->group(function () {
     // Email & Password Authentication
-    Route::post('/register', [AuthController::class, 'register'])->name('api.register');
+    Route::post('/register', [AuthController::class, 'register'])
+        ->middleware('throttle:5,1') // Rate limiting: 5 registros por minuto
+        ->name('api.register');
     Route::post('/login', [AuthController::class, 'login'])
         ->middleware('throttle:5,1') // Rate limiting: 5 attempts per minute
         ->name('api.login');
@@ -32,6 +34,7 @@ Route::prefix('auth')->group(function () {
         ->middleware('throttle:3,1')
         ->name('api.password.forgot');
     Route::post('/reset-password', [PasswordController::class, 'resetPassword'])
+        ->middleware('throttle:6,1') // Rate limiting: evita fuerza bruta del token de reseteo
         ->name('api.password.reset');
 
     // Google OAuth
@@ -39,8 +42,6 @@ Route::prefix('auth')->group(function () {
         ->name('api.google.redirect');
     Route::get('/google/callback', [GoogleAuthController::class, 'callback'])
         ->name('api.google.callback');
-    Route::get('/google/debug', [GoogleAuthController::class, 'debug'])
-        ->name('api.google.debug');
 });
 
 // Protected routes (require authentication)
@@ -49,29 +50,24 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/auth/me', [AuthController::class, 'me'])->name('api.me');
     Route::post('/auth/logout', [AuthController::class, 'logout'])->name('api.logout');
 
-    // Users list (for testing/admin)
-    Route::get('/users', [UserController::class, 'index'])->name('api.users.index');
-    Route::get('/users/{id}', [UserController::class, 'show'])->name('api.users.show');
-    Route::get('/user/me', [UserController::class, 'me'])->name('api.users.me');
-    Route::get('/user/income', [UserController::class, 'income'])->name('api.users.income');
-    Route::put('/user/income', [UserController::class, 'income'])->name('api.users.income');
-
     // Category and Expense routes would go here, e.g.:
     Route::apiResource('categories', CategoryController::class);
 
     Route::get('/expenses/byMonth', [ExpensesController::class, 'byMonth'])->name('api.expenses.byMonth');
     Route::apiResource('expenses', ExpensesController::class);
 
+    // Email Verification
+    Route::get('/email/verify/{id}/{hash}', [UserController::class, 'verifyEmail'])
+        ->middleware(['signed'])
+        ->name('verification.verify');
+    
     Route::post('/email/resend', [UserController::class, 'resendVerificationEmail'])
         ->middleware('throttle:3,1')
         ->name('verification.resend');
 });
 
-    // Email Verification
- Route::get('/email/verify/{id}/{hash}', [UserController::class, 'verifyEmail'])->name('verification.verify');
-    
 // Protected routes that require email verification
-Route::middleware(['auth:api', 'verified'])->group(function () {
+Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     // Add routes here that require email verification
     // Example:
     // Route::apiResource('expenses', ExpenseController::class);

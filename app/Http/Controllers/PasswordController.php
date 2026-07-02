@@ -6,6 +6,7 @@ use App\Http\Requests\ForgotPasswordRequest;
 use App\Http\Requests\ResetPasswordRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Validation\ValidationException;
 
@@ -16,19 +17,19 @@ class PasswordController extends Controller
      */
     public function forgotPassword(ForgotPasswordRequest $request): JsonResponse
     {
+        // Intentamos enviar el enlace, pero respondemos SIEMPRE lo mismo,
+        // exista o no la cuenta, para no permitir enumeración de usuarios.
         $status = Password::sendResetLink(
             $request->only('email')
         );
 
-        if ($status === Password::RESET_LINK_SENT) {
-            return response()->json([
-                'message' => 'Enlace de recuperación enviado a tu email.',
-            ], 200);
+        if ($status !== Password::RESET_LINK_SENT) {
+            Log::info('Solicitud de reseteo de contraseña sin envío', ['status' => $status]);
         }
 
-        throw ValidationException::withMessages([
-            'email' => [__($status)],
-        ]);
+        return response()->json([
+            'message' => 'Si el email está registrado, te enviamos un enlace de recuperación.',
+        ], 200);
     }
 
     /**
