@@ -3,10 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\AuthProvider;
+use App\Models\Category;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Laravel\Socialite\Facades\Socialite;
 
@@ -17,23 +20,15 @@ class GoogleAuthController extends Controller
      */
     public function redirect()
     {
-        return Socialite::driver('google')->stateless()->redirect();
-    }
+        // Generar un state de un solo uso (protección CSRF del flujo OAuth).
+        // El backend lo gestiona por completo: el frontend solo navega a esta ruta.
+        $state = Str::random(40);
+        Cache::put("google_oauth_state:{$state}", true, now()->addMinutes(10));
 
-    /**
-     * Debug endpoint to check Google OAuth configuration.
-     */
-    public function debug(): JsonResponse
-    {
-        return response()->json([
-            'config' => [
-                'client_id' => config('services.google.client_id') ? 'Configurado ✓' : 'NO configurado ✗',
-                'client_secret' => config('services.google.client_secret') ? 'Configurado ✓' : 'NO configurado ✗',
-                'redirect_uri' => config('services.google.redirect'),
-            ],
-            'request_params' => request()->all(),
-            'full_url' => request()->fullUrl(),
-        ], 200);
+        return Socialite::driver('google')
+            ->stateless()
+            ->with(['state' => $state])
+            ->redirect();
     }
 
     /**
@@ -55,6 +50,14 @@ class GoogleAuthController extends Controller
                 return response()->json([
                     'message' => 'Código de autorización no recibido.',
                     'error' => 'Parámetro code faltante en la respuesta de Google.',
+                ], 400);
+            }
+
+            // Validar el state de OAuth (protección CSRF) — token de un solo uso.
+            $state = request()->get('state');
+            if (!$state || !Cache::pull("google_oauth_state:{$state}")) {
+                return response()->json([
+                    'message' => 'Estado de OAuth inválido o expirado.',
                 ], 400);
             }
 
@@ -81,8 +84,20 @@ class GoogleAuthController extends Controller
                         'email_verified_at' => now(), // Auto-verify Google users
                     ]);
 
+                    // Crear las categorías por defecto para el usuario nuevo
+                    Category::createDefaultsForUser($user->id);
+
                     event(new Registered($user));
                 } else {
+                    // Solo auto-vincular/verificar si Google confirma el email como verificado.
+                    // Evita el takeover de una cuenta password cuyo email nunca se verificó.
+                    $emailVerifiedByGoogle = $googleUser->user['email_verified'] ?? false;
+                    if (!$emailVerifiedByGoogle) {
+                        return response()->json([
+                            'message' => 'No se puede vincular la cuenta: el email de Google no está verificado.',
+                        ], 422);
+                    }
+
                     // User exists - auto-verify email if not verified
                     if (is_null($user->email_verified_at)) {
                         $user->email_verified_at = now();
@@ -107,9 +122,9 @@ class GoogleAuthController extends Controller
                 'token' => $token,
             ], 200);
         } catch (\Exception $e) {
+            Log::error('Error en autenticación con Google', ['exception' => $e]);
             return response()->json([
                 'message' => 'Error al autenticar con Google.',
-                'error' => $e->getMessage(),
             ], 500);
         }
     }
