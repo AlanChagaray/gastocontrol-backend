@@ -38,9 +38,12 @@ class Category extends Model
         return [
             ['name' => 'Supermercado', 'icon' => 'shoppingCart', 'color' => '#22c55e', 'sort_order' => 1],
             ['name' => 'Alquiler',     'icon' => 'home',         'color' => '#8b5cf6', 'sort_order' => 2],
-            ['name' => 'Seguros',      'icon' => 'shieldCheck',  'color' => '#3b82f6', 'sort_order' => 3],
-            ['name' => 'Deportes',     'icon' => 'dumbbell',     'color' => '#ec4899', 'sort_order' => 4],
-            ['name' => 'Mascotas',     'icon' => 'pawPrint',     'color' => '#f59e0b', 'sort_order' => 5],
+            ['name' => 'Luz',          'icon' => 'lightbulb',    'color' => '#f59e0b', 'sort_order' => 3],
+            ['name' => 'Gas',          'icon' => 'flame',        'color' => '#f97316', 'sort_order' => 4],
+            ['name' => 'Agua',         'icon' => 'droplets',     'color' => '#3b82f6', 'sort_order' => 5],
+            ['name' => 'Seguros',      'icon' => 'shieldCheck',  'color' => '#3b82f6', 'sort_order' => 6],
+            ['name' => 'Deportes',     'icon' => 'dumbbell',     'color' => '#ec4899', 'sort_order' => 7],
+            ['name' => 'Mascotas',     'icon' => 'pawPrint',     'color' => '#f59e0b', 'sort_order' => 8],
         ];
     }
 
