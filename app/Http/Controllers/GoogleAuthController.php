@@ -6,7 +6,7 @@ use App\Models\AuthProvider;
 use App\Models\Category;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
-use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
@@ -34,31 +34,25 @@ class GoogleAuthController extends Controller
     /**
      * Handle Google OAuth callback.
      */
-    public function callback(): JsonResponse
+    public function callback(): RedirectResponse
     {
+        $frontendUrl = rtrim((string) config('app.frontend_url'), '/');
+
         try {
             // Check if user denied access or there's an error
             if (request()->has('error')) {
-                return response()->json([
-                    'message' => 'Acceso denegado por el usuario.',
-                    'error' => request()->get('error'),
-                ], 400);
+                return redirect()->away("{$frontendUrl}/auth/callback?error=access_denied");
             }
 
             // Check if code parameter is present
             if (!request()->has('code')) {
-                return response()->json([
-                    'message' => 'Código de autorización no recibido.',
-                    'error' => 'Parámetro code faltante en la respuesta de Google.',
-                ], 400);
+                return redirect()->away("{$frontendUrl}/auth/callback?error=missing_code");
             }
 
             // Validar el state de OAuth (protección CSRF) — token de un solo uso.
             $state = request()->get('state');
             if (!$state || !Cache::pull("google_oauth_state:{$state}")) {
-                return response()->json([
-                    'message' => 'Estado de OAuth inválido o expirado.',
-                ], 400);
+                return redirect()->away("{$frontendUrl}/auth/callback?error=invalid_state");
             }
 
             $googleUser = Socialite::driver('google')->stateless()->user();
@@ -93,9 +87,7 @@ class GoogleAuthController extends Controller
                     // Evita el takeover de una cuenta password cuyo email nunca se verificó.
                     $emailVerifiedByGoogle = $googleUser->user['email_verified'] ?? false;
                     if (!$emailVerifiedByGoogle) {
-                        return response()->json([
-                            'message' => 'No se puede vincular la cuenta: el email de Google no está verificado.',
-                        ], 422);
+                        return redirect()->away("{$frontendUrl}/auth/callback?error=email_not_verified");
                     }
 
                     // User exists - auto-verify email if not verified
@@ -116,16 +108,10 @@ class GoogleAuthController extends Controller
             // Generate Sanctum token
             $token = $user->createToken('google-auth-token')->plainTextToken;
 
-            return response()->json([
-                'message' => 'Login con Google exitoso.',
-                'user' => $user,
-                'token' => $token,
-            ], 200);
+            return redirect()->away("{$frontendUrl}/auth/callback#token=" . urlencode($token));
         } catch (\Exception $e) {
             Log::error('Error en autenticación con Google', ['exception' => $e]);
-            return response()->json([
-                'message' => 'Error al autenticar con Google.',
-            ], 500);
+            return redirect()->away("{$frontendUrl}/auth/callback?error=google_auth_failed");
         }
     }
 }
