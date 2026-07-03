@@ -72,4 +72,12 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(Expenses::class);
     }
 
+    /**
+     * Get the monthly incomes for the user.
+     */
+    public function monthlyIncomes(): HasMany
+    {
+        return $this->hasMany(MonthlyIncome::class);
+    }
+
 }
