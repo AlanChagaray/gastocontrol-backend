@@ -6,7 +6,7 @@ use App\Http\Controllers\ExpensesController;
 use App\Http\Controllers\GoogleAuthController;
 use App\Http\Controllers\PasswordController;
 use App\Http\Controllers\UserController;
-use App\Http\Controllers\UserIncomeController;
+use App\Http\Controllers\IncomeController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Support\Facades\Route;
 
@@ -51,9 +51,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/auth/me', [AuthController::class, 'me'])->name('api.me');
     Route::post('/auth/logout', [AuthController::class, 'logout'])->name('api.logout');
 
-    // Ingreso mensual del usuario
-    Route::get('/user/income', [UserIncomeController::class, 'show'])->name('api.user.income.show');
-    Route::put('/user/income', [UserIncomeController::class, 'update'])->name('api.user.income.update');
+    // Ingresos del usuario
+    Route::get('/incomes/byMonth', [IncomeController::class, 'byMonth'])->name('api.incomes.byMonth');
+    Route::apiResource('incomes', IncomeController::class);
 
     // Category and Expense routes would go here, e.g.:
     Route::apiResource('categories', CategoryController::class);

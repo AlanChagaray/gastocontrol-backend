@@ -4,7 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class UpdateIncomeRequest extends FormRequest
+class StoreIncomeRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -22,9 +22,9 @@ class UpdateIncomeRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => 'sometimes|required|string|max:255',
-            'amount' => 'sometimes|required|numeric|min:1',
-            'income_date' => 'sometimes|required|date',
+            'name' => 'required|string|max:255',
+            'amount' => 'required|numeric|min:1',
+            'income_date' => 'required|date',
         ];
     }
 

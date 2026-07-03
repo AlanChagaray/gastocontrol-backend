@@ -5,16 +5,16 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class MonthlyIncome extends Model
+class Income extends Model
 {
-    /** @use HasFactory<\Database\Factories\MonthlyIncomeFactory> */
+    /** @use HasFactory<\Database\Factories\IncomeFactory> */
     use HasFactory;
 
     protected $fillable = [
         'user_id',
-        'year',
-        'month',
+        'name',
         'amount',
+        'income_date',
     ];
 
     public function user()
